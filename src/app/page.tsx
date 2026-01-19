@@ -7,6 +7,7 @@ import {
 import { getCurrentUser, logout } from "@/app/actions/auth-actions";
 import { Dashboard } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
+import { CalendarExpenseViewer } from "@/components/calendar-expense-viewer";
 
 interface HomePageProps {
   searchParams: Promise<{ from?: string; to?: string }>;
@@ -41,11 +42,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               Welcome back, {user.name}
             </p>
           </div>
-          <form action={logout}>
-            <Button variant="outline" type="submit">
-              Sign out
-            </Button>
-          </form>
+          <div className="flex items-center gap-2">
+            <CalendarExpenseViewer expenses={expenses} />
+            <form action={logout}>
+              <Button variant="outline" type="submit">
+                Sign out
+              </Button>
+            </form>
+          </div>
         </header>
         <Dashboard
           expenses={expenses}

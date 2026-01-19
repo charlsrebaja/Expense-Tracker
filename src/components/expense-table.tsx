@@ -38,6 +38,8 @@ export function ExpenseTable({ expenses }: ExpenseTableProps) {
   const [isPending, startTransition] = useTransition();
   const [editingExpense, setEditingExpense] =
     useState<SerializedExpense | null>(null);
+  const [deletingExpense, setDeletingExpense] =
+    useState<SerializedExpense | null>(null);
   const [editForm, setEditForm] = useState({
     description: "",
     amount: "",
@@ -89,14 +91,16 @@ export function ExpenseTable({ expenses }: ExpenseTableProps) {
     return result;
   }, [expenses, searchQuery, sortField, sortOrder]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = () => {
+    if (!deletingExpense) return;
     startTransition(async () => {
-      const result = await deleteExpense(id);
+      const result = await deleteExpense(deletingExpense.id);
       if (result.success) {
         toast.success(result.message);
       } else {
         toast.error(result.message);
       }
+      setDeletingExpense(null);
     });
   };
 
@@ -293,7 +297,7 @@ export function ExpenseTable({ expenses }: ExpenseTableProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(expense.id)}
+                        onClick={() => setDeletingExpense(expense)}
                         disabled={isPending}
                         title="Delete"
                       >
@@ -368,6 +372,47 @@ export function ExpenseTable({ expenses }: ExpenseTableProps) {
             </Button>
             <Button onClick={handleUpdate} disabled={isPending}>
               {isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deletingExpense !== null}
+        onOpenChange={() => setDeletingExpense(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Expense</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">
+              Are you sure you want to delete this expense?
+            </p>
+            {deletingExpense && (
+              <div className="mt-4 p-4 bg-muted rounded-lg">
+                <p className="font-medium">{deletingExpense.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  ₱{Number(deletingExpense.amount).toFixed(2)}
+                  {deletingExpense.category && ` • ${deletingExpense.category}`}
+                </p>
+              </div>
+            )}
+            <p className="text-sm text-destructive mt-4">
+              This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingExpense(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
